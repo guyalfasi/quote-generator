@@ -1,0 +1,12 @@
+{
+	"name": "quotegenerator",
+	"version": "1.0.0",
+	"scripts": {
+		"client": "cd client && npm run dev",
+		"server": "cd server && python app.py",
+		"dev": "concurrently \"npm run server\" \"npm run client\""
+	},
+	"devDependencies": {
+		"concurrently": "^9.1.2"
+	}
+}
