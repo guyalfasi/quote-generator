@@ -1,0 +1,36 @@
+@import 'reset.scss';
+
+.app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+
+    img {
+        width: 720px;
+        height: 420px;
+    }
+
+    select {
+        margin: 0.5em;
+        padding: 0.5em;
+    }
+
+}
+
+
+button {
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}

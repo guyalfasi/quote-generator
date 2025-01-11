@@ -1,41 +1,48 @@
 import json
-from flask import Flask, request, send_file
+import random
+from flask import Flask, jsonify, request, send_file
 from image_gen import generate_image
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Load data
 with open('data/quotes.json', 'r') as f:
     quotes = json.load(f)
 
-with open('data/characters.json', 'r') as f:
-    characters = json.load(f)
+@app.route('/characters', methods=['GET'])
+def get_characters():
+    with open('data/characters.json', 'r') as f:
+        characters = json.load(f)
+    return jsonify(characters)
 
 @app.route('/generate', methods=['POST'])
 def generate():
     data = request.json
     if not data:
-        return "Missing JSON payload", 400
+        return jsonify({"error": "Missing JSON payload"}), 400
 
-    # Extract character and quote from the payload
     character_name = data.get('character')
     quote = data.get('quote')
 
-    # Validate input
-    if not character_name or not quote:
-        return "Missing character or quote", 400
+    if not character_name:
+        return jsonify({"error": "Missing character"}), 400
 
-    # Find the character object in the list
+    with open('data/characters.json', 'r') as f:
+        characters = json.load(f)
+
     character = next((c for c in characters if c['name'] == character_name), None)
     if not character:
-        return "Invalid character", 400
+        return jsonify({"error": "Invalid character"}), 400
 
-    # Generate the image
     try:
-        return generate_image(character, quote)
+        image_stream = generate_image(character, quote if quote else random.choice(quotes))
+        return send_file(image_stream, mimetype='image/png')
     except Exception as e:
-        return f"Error generating image: {str(e)}", 500
+        return jsonify({"error": f"Error generating image: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
     app.run()
+
