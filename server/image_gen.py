@@ -2,7 +2,6 @@ import json
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 from io import BytesIO
-from uuid import uuid4
 import random
 
 with open('data/quotes.json', 'r') as f:

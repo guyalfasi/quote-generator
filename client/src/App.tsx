@@ -3,20 +3,19 @@ import axios from 'axios';
 
 import './App.scss';
 
-
-
 function App() {
 	const [characters, setCharacters] = useState<string[]>([]);
 	const [image, setImage] = useState<string | null>(null);
 	const [character, setCharacter] = useState<string>('');
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+    const [quote, setQuote] = useState<string>('')
 
 	const generateImage = async () => {
 		setLoading(true);
 		setError(null);
 		try {
-			const response = await axios.post('http://localhost:5000/generate', { character, quote: 'Hello World' }, { responseType: 'blob' });
+			const response = await axios.post(import.meta.env.VITE_SERVER_URL + '/generate', { character, quote }, { responseType: 'blob' });
 			const url = URL.createObjectURL(response.data);
 			setImage(url);
 		} catch (err) {
@@ -45,6 +44,8 @@ function App() {
 			<div>
 				{loading ? (<p>Loading...</p>) : (<img id="quote-image" src={image || './quote.png'} alt="quote" />)}
 			</div>
+
+            <textarea onChange={(e) => setQuote(e.target.value)}></textarea>
 
 			<div>
 				<label htmlFor="character-select">Select Character:</label>

@@ -6,5 +6,9 @@
     {
         "name": "Steve",
         "img": "steve_minecraft.png"
+    },
+    {
+        "name": "Peter Griffin",
+        "img": "peter_griffin.png"
     }
 ]
