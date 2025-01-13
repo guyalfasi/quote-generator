@@ -1,62 +1,61 @@
-import json
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 from io import BytesIO
-import random
 from typing import List, Dict
-import textwrap
+from textwrap import fill as wrapfill
 
-with open('data/quotes.json', 'r') as f:
-    quotes = json.load(f)
+class Resolution:
+    def __init__(self, width: int, height: int, scaling: int):
+        self.width = width
+        self.height = height
+        self.scaling = scaling
 
-with open('data/characters.json', 'r') as f:
-    characters = json.load(f)
+    @property
+    def dimensions(self):
+        return self.width, self.height
 
-resolutions: List[Dict[str, int]] = [
-    {"width": 1280, "height": 720}, # 720p
-    {"width": 1920, "height": 1080}, # 1080p
-    {"width": 2560, "height": 1440} # 1440p
+resolution_list = [
+    Resolution(1280, 720, 1),
+    Resolution(1920, 1080, 2), 
+    Resolution(2560, 1440, 3),
 ]
 
 font_path = "static/fonts/ShadowsIntoLight-Regular.ttf"
 image_dir = "static/images/"
 
-def scale_character(char_size, scaling_factor):
-    char_width, char_height = char_size
-    max_width, max_height = 640, 720
+def generate_image(character, quote, resolution=1):
+    selected_resolution = resolution_list[resolution]
 
-    scale = min((max_width / char_width) * scaling_factor, (max_height / char_height) * scaling_factor) # multiply by scaling factor
-    
-    return (int(char_width * scale), int(char_height * scale))
+    quote_image = Image.new("RGB", selected_resolution.dimensions)
 
-def generate_image(character, quote, resolution=0): 
-    quote_img = Image.new("RGB", tuple(resolutions[resolution].values()))
-
-    scaling_factor = resolution + 1
+    center_point = (selected_resolution.width / 2, selected_resolution.height / 2)
 
     char_image_path = os.path.join(image_dir, character["img"])
     char_img = Image.open(char_image_path)
-    char_img = char_img.resize(scale_character(char_img.size, scaling_factor))
 
-    char_img_grayscaled = ImageOps.grayscale(char_img)
-    quote_img.paste(char_img_grayscaled, (0, 180))
+    if char_img.size[0] > 1920 or char_img.size[1] > 1080:  # make character 1080p reso or less
+        char_img.thumbnail((selected_resolution.width, selected_resolution.height))
+    else:
+        char_img = char_img.resize((char_img.width * selected_resolution.scaling, char_img.height * selected_resolution.scaling))
 
-    font_size = 48 * (scaling_factor)
+    quote_image.paste(ImageOps.grayscale(char_img), (0, selected_resolution.height - char_img.height))
 
+    font_size = 32 * selected_resolution.scaling
     font = ImageFont.truetype(font_path, font_size)
-    draw = ImageDraw.Draw(quote_img)
+    draw = ImageDraw.Draw(quote_image)
 
-    wrapped_quote = textwrap.fill(quote, 30);
+    wrapped_quote = wrapfill(quote, 35)
 
-    draw.text((200 + (400 * scaling_factor), 100), wrapped_quote, (255, 255, 255), font=font)
-    draw.text((200 + (400 * scaling_factor), 600), f"- {character['name']}", (255, 255, 255), font=font)
+    quote_position = (center_point[0] - 200, center_point[1] - (100 * selected_resolution.scaling))
+    draw.text(quote_position, wrapped_quote, font=font, fill="white")
+
+    name_text = f"- {character['name']}"
+
+    name_position = (quote_position[0], quote_position[1] + (200 * selected_resolution.scaling))
+    draw.text(name_position, name_text, font=font, fill="white")
 
     img_io = BytesIO()
-    quote_img.save(img_io, "PNG")
+    quote_image.save(img_io, "PNG")
     img_io.seek(0)
     
     return img_io
-
-if __name__ == '__main__':
-    char = next((c for c in characters if c['name'] == 'Goku'), None)
-    print(generate_image(char, random.choice(quotes)))
